@@ -1,11 +1,15 @@
 package study.datajpa.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 
+import javax.persistence.Lob;
+import javax.persistence.LockModeType;
+import javax.persistence.QueryHint;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -39,4 +43,35 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findListByUsername(String username); // 컬렉션
     Member findMemberByUsername(String username); // 단건
     Optional<Member> findOptionalByUsername(String username); // 단건 Optional
+
+//    @Query(value = "select m from Member m left join m.team t",
+//        countQuery = "select count(m) from Member m"
+//    )
+    Page<Member> findByAge(int age, Pageable pageable); // countQuery는 따로 작성할 수 있음(최적화 가능)
+
+    @Modifying(clearAutomatically = true)// clearAutomatically = true : 영속성 컨텍스트를 clear해주는 것을 알아서 해주는 기능 //수정하는 Query에서는 반드시 @Modifying사용하자!!
+    @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
+    int bulkAgePlus(@Param("age") int age);
+
+    @Query("select m from Member m left join fetch m.team") // join fetch을 사용해서 Member을 조회할 때 team에 관련된 사항을 Proxy가 아닌 바로 Team을 함께 한번에 조회한다.
+    List<Member> findMemberFetchJoin();
+
+    //위의 내용을 JPQL을 직접 작성하지 않고 spring data Jpa에서 사용하는 방법!! => findAll()을 오버라이드한다
+    @Override
+    @EntityGraph(attributePaths = {"team"}) // @EntityGraph(attributePaths = {"team"})을 하면 fetch join을 사용한 것처럼 Member을 조회할 때 team도 함께 조회해온다.
+    List<Member> findAll();
+
+    // JPQL하고 EntityGraph를 함께 사용가능
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
+
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    Member findReadOnlyByUsername(String username);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Member> findLockByUsername(String username);
 }

@@ -1,10 +1,14 @@
 package study.datajpa.repository;
 
+import org.hibernate.usertype.LoggableUserType;
 import org.springframework.stereotype.Repository;
 import study.datajpa.entity.Member;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.lang.invoke.CallSite;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class MemberJpaRepository {
@@ -17,7 +21,57 @@ public class MemberJpaRepository {
         return member;
     }
 
+    public void delete(Member member){
+        em.remove(member); // JPA가 remove를 가지고 있기 때문에 알아서 DELETE쿼리를 날린다.
+    }
+
+    public List<Member> findAll(){
+        // JPQL
+        return em.createQuery("select m from Member m", Member.class)
+                .getResultList();
+    }
+
+     public Optional<Member> findById(Long id){
+        Member member = em.find(Member.class, id);
+        return Optional.ofNullable(member);
+    }
+
+    public long count(){
+        return em.createQuery("select count(m) from Member m", Long.class)
+                .getSingleResult();
+    }
+
     public Member find(Long id){
         return em.find(Member.class, id);
+    }
+
+    // JPQL로 직접짬... => 불편...
+    public List<Member> findByUsernameAndAgeGreaterThan(String username, int age){
+        return em.createQuery("select m from Member m where m.username = :username and m.age > :age")
+                .setParameter("username", username)
+                .setParameter("age", age)
+                .getResultList();
+    }
+
+    // Member.class에 직접 설정한 @NamedQuery 사용하는 법
+    public List<Member> findByUsername(String username){
+        return em.createNamedQuery("Member.findByUsername", Member.class)
+                .setParameter("username", username)
+                .getResultList();
+    }
+
+    // 페이징!!!!
+    public List<Member> findByPage(int age, int offset, int limit){
+        return em.createQuery("select m from Member m where m.age = :age order by m.username desc ")
+                .setParameter("age", age)
+                .setFirstResult(offset) // 시작점
+                .setMaxResults(limit) // 페이지 당 최대 몇개?
+                .getResultList();
+    }
+
+    public long totalCount(int age){
+        return em.createQuery("select count(m) from Member m where m.age = : age", Long.class)
+                .setParameter("age", age)
+                .getSingleResult();
     }
 }

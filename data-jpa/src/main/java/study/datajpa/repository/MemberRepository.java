@@ -7,14 +7,13 @@ import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 
-import javax.persistence.Lob;
 import javax.persistence.LockModeType;
 import javax.persistence.QueryHint;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom { // 내가 직접 만든 repo MemberRepositoryCustom상속
     // JpaRepository<Member, Long> => JpaRepository<엔티티타입, 엔티티의 PK타입>
 
     // JPA에 만들어져 있지 않은 나만의 조회기능을 만드려면?

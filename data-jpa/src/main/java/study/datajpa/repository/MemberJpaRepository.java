@@ -1,12 +1,10 @@
 package study.datajpa.repository;
 
-import org.hibernate.usertype.LoggableUserType;
 import org.springframework.stereotype.Repository;
 import study.datajpa.entity.Member;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import java.lang.invoke.CallSite;
 import java.util.List;
 import java.util.Optional;
 
